@@ -158,19 +158,19 @@ public class Seguridad {
 
 		/* Por cada arista una clausula de los literales involucrados */
 
-		
-		
-		/*
+		/************************************
 		 * tener un mu√±eco en el mapa
-		 */
-		for (int i = 0; i < columnas; i++) {
-			for (int j = 0; j < filas; j++) {
+		 **********************************/
+
+		for (int j = 0; j < filas; j++) {
+			for (int i = 0; i < columnas; i++) {
 				if (aLiteral[i][j] != 0) {
-					for (int i2 = i; i2 < columnas; i2++) {
-						for (int j2 = j + 1; j2 < filas; j2++) {
-							if (aLiteral[i2][j2] != 0) {
+
+					for (int j2 = 0; j2 < filas; j2++) {
+						for (int i2 = i; i2 < columnas; i2++) {
+							if (aLiteral[i2][j2] != 0 && aLiteral[i2][j2] != aLiteral[i][j]) {
 								/* (-A00 v -A01) ^ (-A00 v -A02 ).... // (-A01 v -A00).... */
-								//addClause(satWrapper, -aLiteral[i][j], -aLiteral[i2][j2]);
+								addClause(satWrapper, -aLiteral[i][j], -aLiteral[i2][j2]);
 							}
 						}
 					}
@@ -179,8 +179,8 @@ public class Seguridad {
 			}
 		}
 		/* (A00 v A01 v A02 v A03 ...).... */
-		//addClause(satWrapper, aLiteral, true);
-		
+		addClause(satWrapper, aLiteral, true);
+
 		System.out.println("-------------- fin 1 solo muÒeco en mapa");
 
 		/************************************************************
@@ -188,73 +188,66 @@ public class Seguridad {
 		 ***********************************************************/
 
 		for (int j = 0; j < filas; j++) {
-			int serptemp=0;;
-			boolean mod=false;
+
 			for (int i = 0; i < columnas; i++) {
+
 				for (int index = 0; index < sLiteral.length; index++) {
+					for (int index2 = 0; index2 < sLiteral.length; index2++) {
+					for (int i2 = i + 1; i2 < columnas; i2++) {						
 
-					if (sLiteral[index][i][j] != 0) {
-						if(!mod) {
-							mod=true;
-							serptemp = sLiteral[index][i][j];
-						}else {
-							if(serptemp!=0) {
-							//addClause(satWrapper, -serptemp,-sLiteral[index][i][j]);
+							if (sLiteral[index][i][j] != 0 && sLiteral[index2][i2][j] != 0) {
+
+								addClause(satWrapper, -sLiteral[index][i][j], -sLiteral[index2][i2][j]);
+
 							}
-						}
-						
-						
-						
-						
-					}
 
+						}
+
+					}
 				}
-				
+
 			}
-			// mandar todos con or
-			
+
 		}
 
 		System.out.println("-------------fin no serpientes misma fila");
 
 		/*************************************************************
-		 * Serpientes no pueden estar en misma fila o columna que personaje TODO REVISAR
+		 * Serpientes no pueden estar en misma fila o columna que personaje 
 		 *************************************************************/
-		
+
 		for (int index = 0; index < sLiteral.length; index++) {
 			for (int i = 0; i < sLiteral[index].length; i++) {
 				for (int j = 0; j < sLiteral[index][i].length; j++) {
 					// si existe la serpiente
-					
+
 					if (sLiteral[index][i][j] != 0) {
 						/*
 						 * no en la misma fila
 						 */
 						for (int i2 = 0; i2 < aLiteral.length; i2++) {
 							if (aLiteral[i2][j] != 0) {
-								//addClause(satWrapper, -sLiteral[index][i][j], -aLiteral[i2][j]);
-								
+								addClause(satWrapper, -sLiteral[index][i][j], -aLiteral[i2][j]);
+
 							}
 						}
-						
-						
+
 						/*
 						 * No en la misma columna
 						 */
 						for (int j2 = 0; j2 < aLiteral[i].length; j2++) {
-							if (aLiteral[i][j2] != 0 && j2!= j) {
-								//addClause(satWrapper, -sLiteral[index][i][j], -aLiteral[i][j2]);
+							if (aLiteral[i][j2] != 0 && j2 != j) {
+								addClause(satWrapper, -sLiteral[index][i][j], -aLiteral[i][j2]);
 							}
 						}
 
 					}
-					
-					
+
 				}
 			}
 
 		}
-		
+
 		System.out.println("-------------- fin no serpiente con muÒeco en fila o columna");
 
 		/**************************
@@ -275,10 +268,12 @@ public class Seguridad {
 			}
 
 		}
-		addClause(satWrapper, serp, true);
+
 		// hago grupos de numero serpientes (s1 v s2 v s3)
-		addClause(satWrapper, serp, NUMSERPIENTES);
+		// addClause(satWrapper, serp, NUMSERPIENTES);
+		addClause(satWrapper, serp, true);
 		System.out.println("-------------- fin meter n serpientes");
+
 		// 4. INVOCAR AL SOLUCIONADOR
 
 		Search<BooleanVar> search = new DepthFirstSearch<BooleanVar>();
@@ -347,24 +342,25 @@ public class Seguridad {
 	public static void addClause(SatWrapper satWrapper, int[] literals, boolean b) {
 		IntVec clause = new IntVec(satWrapper.pool);
 		for (int i = 0; i < literals.length; i++) {
-			if(literals[i]!=0)
+			if (literals[i] != 0)
 				clause.add(b ? literals[i] : -literals[i]);
 
 		}
 		if (DEBUGCLAUSE)
 			System.out.println("[]+boolean: " + clause.toString());
+
 		satWrapper.addModelClause(clause.toArray());
 	}
 
 	public static void addClause(SatWrapper satWrapper, int[] literals, int numeroSerpientes) {
-
+		// numeroSerpientes++;
 		int posClausula[] = new int[numeroSerpientes]; // array clausulas de serpiente a aÔøΩadir
 		// System.out.println("literales " + literals.length);
-		//sacarPosiciones(satWrapper, literals, posClausula, numeroSerpientes, 0, 0, true);
-		 //System.out.println("literales " + literals.length);
-		 numeroSerpientes++;
-		 posClausula = new int[numeroSerpientes];
-		 sacarPosiciones(satWrapper, literals, posClausula, numeroSerpientes, 0, 0,	 false);
+		sacarPosiciones(satWrapper, literals, posClausula, numeroSerpientes, 0, 0, true);
+		// System.out.println("literales " + literals.length);
+		// posClausula = new int[numeroSerpientes];
+		// sacarPosiciones(satWrapper, literals, posClausula, numeroSerpientes, 0, 0,
+		// false);
 
 	}
 
