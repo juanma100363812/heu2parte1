@@ -16,7 +16,7 @@ import org.jacop.search.SmallestDomain;
 
 public class Seguridad {
 
-	public static final int NUMSERPIENTES = 2;
+	public static final int NUMSERPIENTES = 3;
 	public static final boolean DEBUG = false;
 	public static final boolean DEBUGCLAUSE = true;
 
@@ -122,6 +122,7 @@ public class Seguridad {
 			}
 		}
 
+		// ver el entero que correspondes a cada literal por posiciones
 		if (DEBUG) {
 			// sacos pjs y serpientes en mapa
 			for (int i = 0; i < aLiteral.length; i++) {
@@ -193,11 +194,11 @@ public class Seguridad {
 
 				for (int index = 0; index < sLiteral.length; index++) {
 					for (int index2 = 0; index2 < sLiteral.length; index2++) {
-					for (int i2 = i + 1; i2 < columnas; i2++) {						
+						for (int i2 = i + 1; i2 < columnas; i2++) {
 
 							if (sLiteral[index][i][j] != 0 && sLiteral[index2][i2][j] != 0) {
 
-								addClause(satWrapper, -sLiteral[index][i][j], -sLiteral[index2][i2][j]);
+								 addClause(satWrapper, -sLiteral[index][i][j], -sLiteral[index2][i2][j]);
 
 							}
 
@@ -213,7 +214,7 @@ public class Seguridad {
 		System.out.println("-------------fin no serpientes misma fila");
 
 		/*************************************************************
-		 * Serpientes no pueden estar en misma fila o columna que personaje 
+		 * Serpientes no pueden estar en misma fila o columna que personaje
 		 *************************************************************/
 
 		for (int index = 0; index < sLiteral.length; index++) {
@@ -227,7 +228,7 @@ public class Seguridad {
 						 */
 						for (int i2 = 0; i2 < aLiteral.length; i2++) {
 							if (aLiteral[i2][j] != 0) {
-								addClause(satWrapper, -sLiteral[index][i][j], -aLiteral[i2][j]);
+								 addClause(satWrapper, -sLiteral[index][i][j], -aLiteral[i2][j]);
 
 							}
 						}
@@ -237,7 +238,7 @@ public class Seguridad {
 						 */
 						for (int j2 = 0; j2 < aLiteral[i].length; j2++) {
 							if (aLiteral[i][j2] != 0 && j2 != j) {
-								addClause(satWrapper, -sLiteral[index][i][j], -aLiteral[i][j2]);
+								 addClause(satWrapper, -sLiteral[index][i][j], -aLiteral[i][j2]);
 							}
 						}
 
@@ -251,27 +252,54 @@ public class Seguridad {
 		System.out.println("-------------- fin no serpiente con muñeco en fila o columna");
 
 		/**************************
-		 * Meter las n serpientes
+		 * Meter las n serpientes contando que no pueden estar en la misma fila
 		 **************************/
-		// array para meter las serpientes para la funcion
+
+		for (int j = 0; j < filas; j++) {
+			for (int i = 0; i < columnas; i++) {
+				for (int index = 0; index < sLiteral.length; index++) {
+					if (sLiteral[index][i][j] != 0) {
+						int[] serp = new int[countVacias];
+						int auxS = 0;
+						serp[auxS++] = sLiteral[index][i][j];
+						for (int j2 = 0; j2 < filas; j2++) {
+							for (int index2 = 0; index2 < sLiteral.length; index2++) {
+								for (int i2 = 0; i2 < columnas; i2++) {
+									// si misma fila fuera
+									if (sLiteral[index2][i2][j2] != 0  && j != j2) { 
+										serp[auxS++] = sLiteral[index2][i2][j2];
+									}
+								}
+							}
+						}
+						if (auxS > 0) {
+							addClause(satWrapper, serp, true);
+						}
+					}
+				}
+			}
+		}
+		
+		
+		
+		
+		
+		
 		int[] serp = new int[countVacias];
 		aux = 0;
 		for (int index = 0; index < sLiteral.length; index++) {
-			for (int i = 0; i < sLiteral[index].length; i++) {
-				for (int j = 0; j < sLiteral[index][i].length; j++) {
-					if (sLiteral[index][i][j] != 0) {
-						// saco la serpiente
-						serp[aux++] = sLiteral[index][i][j];
+			for (int i = 0; i < columnas; i++) {
+				for (int j = 0; j < filas; j++) {
+					if(sLiteral[index][i][j]!=0) {
+						serp[aux++]=sLiteral[index][i][j];
 					}
 				}
-
 			}
-
 		}
+		
+		//addClause(satWrapper, serp, NUMSERPIENTES);
+		
 
-		// hago grupos de numero serpientes (s1 v s2 v s3)
-		// addClause(satWrapper, serp, NUMSERPIENTES);
-		addClause(satWrapper, serp, true);
 		System.out.println("-------------- fin meter n serpientes");
 
 		// 4. INVOCAR AL SOLUCIONADOR
@@ -353,14 +381,13 @@ public class Seguridad {
 	}
 
 	public static void addClause(SatWrapper satWrapper, int[] literals, int numeroSerpientes) {
-		// numeroSerpientes++;
+		 
 		int posClausula[] = new int[numeroSerpientes]; // array clausulas de serpiente a aï¿½adir
 		// System.out.println("literales " + literals.length);
 		sacarPosiciones(satWrapper, literals, posClausula, numeroSerpientes, 0, 0, true);
 		// System.out.println("literales " + literals.length);
-		// posClausula = new int[numeroSerpientes];
-		// sacarPosiciones(satWrapper, literals, posClausula, numeroSerpientes, 0, 0,
-		// false);
+		 //posClausula = new int[++numeroSerpientes];
+		// sacarPosiciones(satWrapper, literals, posClausula, numeroSerpientes, 0, 0, false);
 
 	}
 
